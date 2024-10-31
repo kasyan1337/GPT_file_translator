@@ -3,7 +3,7 @@
 import tiktoken
 
 
-def chunk_paragraphs(paragraphs, max_tokens=7500, model="gpt-4"):
+def chunk_paragraphs(paragraphs, max_tokens=7500, model="gpt-4o"):
     """
     Splits paragraphs into chunks that are less than max_tokens when tokenized.
     """
@@ -32,7 +32,7 @@ def chunk_paragraphs(paragraphs, max_tokens=7500, model="gpt-4"):
     return chunks
 
 
-def chunk_shapes(shapes_with_text, max_tokens=7500, model="gpt-4-turbo"):
+def chunk_shapes(shapes_with_text, max_tokens=7500, model="gpt-4o"):
     """
     Splits shapes into chunks that are less than max_tokens when tokenized.
     """
@@ -51,6 +51,35 @@ def chunk_shapes(shapes_with_text, max_tokens=7500, model="gpt-4-turbo"):
             if current_chunk:
                 chunks.append(current_chunk)
             current_chunk = [(shape, text)]
+            current_tokens = num_tokens
+
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    return chunks
+
+
+def chunk_runs(runs, max_tokens=7500, model="gpt-4o"):
+    """
+    Splits runs into chunks that are less than max_tokens when tokenized.
+    """
+    tokenizer = tiktoken.encoding_for_model(model)
+    chunks = []
+    current_chunk = []
+    current_tokens = 0
+
+    for run in runs:
+        run_text = run.text
+        tokens = tokenizer.encode(run_text)
+        num_tokens = len(tokens)
+        # Check if adding the run would exceed the max tokens
+        if current_tokens + num_tokens <= max_tokens:
+            current_chunk.append(run)
+            current_tokens += num_tokens
+        else:
+            if current_chunk:
+                chunks.append(current_chunk)
+            current_chunk = [run]
             current_tokens = num_tokens
 
     if current_chunk:

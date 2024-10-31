@@ -6,7 +6,6 @@ from src.openai_api import OpenAIAPI
 from src.pdf_processor import PdfProcessor
 from src.pptx_processor import PptxProcessor
 
-
 def load_prompt(prompt_file):
     """
     Load the prompt from a text file.
@@ -21,12 +20,11 @@ def load_prompt(prompt_file):
         )
         return None
 
-
 def main():
     # Directories
     input_dir = "input"
     output_dir = "output"
-    prompt_file = os.path.join(input_dir, "prompt.txt")
+    prompt_file = os.path.join("prompt.txt")
 
     # Load the custom prompt from prompt.txt
     prompt = load_prompt(prompt_file)
@@ -50,11 +48,16 @@ def main():
     else:
         # List of specific files to process
         documents_to_process = [
-            "Všeobecná časť + korózia skriptá.docx"
+            "04-2023.pdf",
         ]  # Specify your files here
 
     # Initialize OpenAI API
-    openai_api = OpenAIAPI(model="gpt-4-turbo")  # You can change the model here
+    # You can choose from the following latest models:
+    # - "gpt-4o"
+    # - "gpt-4o-mini"
+    # - "o1-preview"
+    # - "o1-mini"
+    openai_api = OpenAIAPI(model="gpt-4o")  # You can change the model here
 
     # Process each specified file
     for file_name in documents_to_process:
@@ -79,7 +82,6 @@ def main():
         print(f"Processing {file_name}...")
         processor.process()
         print(f"Finished processing {file_name}.\n")
-
 
 if __name__ == "__main__":
     main()
