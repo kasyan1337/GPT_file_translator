@@ -7,6 +7,7 @@ __pycache__/
 *.so
 input
 output
+prompt.txt
 
 # Distribution / packaging
 .Python
