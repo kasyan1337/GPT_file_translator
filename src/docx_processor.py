@@ -1,30 +1,30 @@
 # src/docx_processor.py
 
-import asyncio
 from docx import Document
 from src.document_processor import DocumentProcessor
-from src.utils import chunk_text
-from tqdm.asyncio import tqdm_asyncio
+from tqdm import tqdm
 
 
 class DocxProcessor(DocumentProcessor):
-    async def process(self):
+    def process(self):
         document = Document(self.file_path)
-        tasks = []
+        total_usage = {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
 
-        for paragraph in document.paragraphs:
+        paragraphs = [p for p in document.paragraphs if p.text.strip()]
+        for paragraph in tqdm(paragraphs, desc="Translating DOCX"):
             original_text = paragraph.text
-            if original_text.strip():
-                chunks = chunk_text(original_text)
-                tasks.extend(
-                    [self.translate_chunk(chunk, paragraph) for chunk in chunks]
-                )
-
-        await tqdm_asyncio.gather(*tasks, desc="Translating DOCX")
+            translated_text = self.openai_api.translate_text(self.prompt, original_text)
+            if translated_text:
+                paragraph.text = translated_text
+                # Update token usage
+                usage = self.openai_api.last_usage
+                total_usage['prompt_tokens'] += usage['prompt_tokens']
+                total_usage['completion_tokens'] += usage['completion_tokens']
+                total_usage['total_tokens'] += usage['total_tokens']
 
         document.save(self.output_path)
 
-    async def translate_chunk(self, text, paragraph):
-        translated_text = await self.openai_api.translate_text(self.prompt, text)
-        if translated_text:
-            paragraph.text = translated_text
+        # Print token usage for the file
+        print(f"Token usage for {self.file_path}: {total_usage}")
+        estimated_cost = self.openai_api.calculate_cost(total_usage)
+        print(f"Estimated cost for {self.file_path}: ${estimated_cost:.4f}")

@@ -1,32 +1,32 @@
 # src/pptx_processor.py
 
-import asyncio
 from pptx import Presentation
 from src.document_processor import DocumentProcessor
-from src.utils import chunk_text
-from tqdm.asyncio import tqdm_asyncio
+from tqdm import tqdm
 
 
 class PptxProcessor(DocumentProcessor):
-    async def process(self):
+    def process(self):
         presentation = Presentation(self.file_path)
-        tasks = []
+        total_usage = {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
 
-        for slide in presentation.slides:
+        slides = [slide for slide in presentation.slides]
+        for slide in tqdm(slides, desc="Translating PPTX"):
             for shape in slide.shapes:
-                if hasattr(shape, "text"):
+                if hasattr(shape, "text") and shape.text.strip():
                     original_text = shape.text
-                    if original_text.strip():
-                        chunks = chunk_text(original_text)
-                        tasks.extend(
-                            [self.translate_chunk(chunk, shape) for chunk in chunks]
-                        )
-
-        await tqdm_asyncio.gather(*tasks, desc="Translating PPTX")
+                    translated_text = self.openai_api.translate_text(self.prompt, original_text)
+                    if translated_text:
+                        shape.text = translated_text
+                        # Update token usage
+                        usage = self.openai_api.last_usage
+                        total_usage['prompt_tokens'] += usage['prompt_tokens']
+                        total_usage['completion_tokens'] += usage['completion_tokens']
+                        total_usage['total_tokens'] += usage['total_tokens']
 
         presentation.save(self.output_path)
 
-    async def translate_chunk(self, text, shape):
-        translated_text = await self.openai_api.translate_text(self.prompt, text)
-        if translated_text:
-            shape.text = translated_text
+        # Print token usage for the file
+        print(f"Token usage for {self.file_path}: {total_usage}")
+        estimated_cost = self.openai_api.calculate_cost(total_usage)
+        print(f"Estimated cost for {self.file_path}: ${estimated_cost:.4f}")
