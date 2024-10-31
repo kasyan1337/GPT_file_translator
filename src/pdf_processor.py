@@ -1,41 +1,57 @@
 # src/pdf_processor.py
 
-import fitz  # PyMuPDF
+import os
+import subprocess
+import tempfile
+
+from pdf2docx import Converter
+
 from src.document_processor import DocumentProcessor
-from src.utils import chunk_text
-from tqdm import tqdm
+from src.docx_processor import DocxProcessor
 
 
 class PdfProcessor(DocumentProcessor):
     def process(self):
-        doc = fitz.open(self.file_path)
-        total_pages = len(doc)
-        total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        # Create a temporary directory for intermediate files
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Define paths for temporary DOCX and output PDF
+            temp_docx_path = os.path.join(
+                temp_dir, os.path.basename(self.file_path).replace(".pdf", ".docx")
+            )
 
-        for page_num in tqdm(range(total_pages), desc="Translating PDF"):
-            page = doc[page_num]
-            original_text = page.get_text("text")
-            if original_text.strip():
-                # Combine text into one chunk per page to reduce API calls
-                translated_text = self.openai_api.translate_text(
-                    self.prompt, original_text
-                )
-                if translated_text:
-                    # Remove existing text
-                    page.clean_contents()
-                    # Create a new text box with the translated text
-                    rect = page.rect
-                    page.insert_textbox(
-                        rect, translated_text, fontsize=12, fontname="helv"
-                    )
-                    # Update token usage
-                    usage = self.openai_api.last_usage
-                    total_usage["prompt_tokens"] += usage["prompt_tokens"]
-                    total_usage["completion_tokens"] += usage["completion_tokens"]
-                    total_usage["total_tokens"] += usage["total_tokens"]
-        doc.save(self.output_path)
+            # Step 1: Convert PDF to DOCX
+            print("Converting PDF to DOCX...")
+            cv = Converter(self.file_path)
+            cv.convert(temp_docx_path)
+            cv.close()
 
-        # Print token usage for the file
-        print(f"Token usage for {self.file_path}: {total_usage}")
-        estimated_cost = self.openai_api.calculate_cost(total_usage)
-        print(f"Estimated cost for {self.file_path}: ${estimated_cost:.4f}")
+            # Step 2: Translate DOCX using DocxProcessor
+            print("Processing DOCX file for translation...")
+            docx_processor = DocxProcessor(
+                temp_docx_path, temp_docx_path, self.openai_api, self.prompt
+            )
+            docx_processor.process()
+
+            # Step 3: Convert Translated DOCX Back to PDF
+            output_pdf_dir = os.path.dirname(self.output_path)
+            print("Converting translated DOCX back to PDF...")
+            subprocess.run(
+                [
+                    "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+                    "--headless",
+                    "--convert-to",
+                    "pdf",
+                    temp_docx_path,
+                    "--outdir",
+                    output_pdf_dir,
+                ]
+            )
+
+            # Step 4: Rename and Move Final PDF to Output Path
+            final_output_path = os.path.join(
+                output_pdf_dir, os.path.basename(temp_docx_path).replace(".docx", ".pdf")
+            )
+            if os.path.exists(final_output_path):
+                os.rename(final_output_path, self.output_path)
+
+            print(f"PDF translation and conversion completed. Saved as: {self.output_path}")
