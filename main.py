@@ -19,7 +19,7 @@ def main():
     output_dir = "output"
 
     # List of specific files to process
-    documents_to_process = ['Aria.docx']  # Specify your files here
+    documents_to_process = ["Aria.docx"]  # Specify your files here
     # documents_to_process = ['04-2023.pdf']
     # documents_to_process = ['NDT vt kutovy zvar.pptx']
 

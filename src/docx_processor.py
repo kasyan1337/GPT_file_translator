@@ -8,7 +8,7 @@ from tqdm import tqdm
 class DocxProcessor(DocumentProcessor):
     def process(self):
         document = Document(self.file_path)
-        total_usage = {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
+        total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
 
         paragraphs = [p for p in document.paragraphs if p.text.strip()]
         for paragraph in tqdm(paragraphs, desc="Translating DOCX"):
@@ -18,9 +18,9 @@ class DocxProcessor(DocumentProcessor):
                 paragraph.text = translated_text
                 # Update token usage
                 usage = self.openai_api.last_usage
-                total_usage['prompt_tokens'] += usage['prompt_tokens']
-                total_usage['completion_tokens'] += usage['completion_tokens']
-                total_usage['total_tokens'] += usage['total_tokens']
+                total_usage["prompt_tokens"] += usage["prompt_tokens"]
+                total_usage["completion_tokens"] += usage["completion_tokens"]
+                total_usage["total_tokens"] += usage["total_tokens"]
 
         document.save(self.output_path)
 

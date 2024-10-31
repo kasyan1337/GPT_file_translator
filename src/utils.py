@@ -12,6 +12,6 @@ def chunk_text(text, max_tokens=7500):
     tokens = tokenizer.encode(text)
     chunks = []
     for i in range(0, len(tokens), max_tokens):
-        chunk = tokenizer.decode(tokens[i:i + max_tokens])
+        chunk = tokenizer.decode(tokens[i : i + max_tokens])
         chunks.append(chunk)
     return chunks
