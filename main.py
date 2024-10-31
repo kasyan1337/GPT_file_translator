@@ -6,17 +6,21 @@ from src.openai_api import OpenAIAPI
 from src.pdf_processor import PdfProcessor
 from src.pptx_processor import PptxProcessor
 
+
 def load_prompt(prompt_file):
     """
     Load the prompt from a text file.
     """
     try:
-        with open(prompt_file, 'r', encoding='utf-8') as file:
+        with open(prompt_file, "r", encoding="utf-8") as file:
             prompt = file.read().strip()
             return prompt
     except FileNotFoundError:
-        print(f"Prompt file '{prompt_file}' not found. Please add a prompt.txt file to the input directory.")
+        print(
+            f"Prompt file '{prompt_file}' not found. Please add a prompt.txt file to the input directory."
+        )
         return None
+
 
 def main():
     # Directories
@@ -38,10 +42,16 @@ def main():
     if process_all_files:
         documents_to_process = os.listdir(input_dir)
         if file_extension_filter:
-            documents_to_process = [f for f in documents_to_process if f.lower().endswith(file_extension_filter)]
+            documents_to_process = [
+                f
+                for f in documents_to_process
+                if f.lower().endswith(file_extension_filter)
+            ]
     else:
         # List of specific files to process
-        documents_to_process = ['Všeobecná časť + korózia skriptá.docx']  # Specify your files here
+        documents_to_process = [
+            "Všeobecná časť + korózia skriptá.docx"
+        ]  # Specify your files here
 
     # Initialize OpenAI API
     openai_api = OpenAIAPI(model="gpt-4-turbo")  # You can change the model here
@@ -69,6 +79,7 @@ def main():
         print(f"Processing {file_name}...")
         processor.process()
         print(f"Finished processing {file_name}.\n")
+
 
 if __name__ == "__main__":
     main()

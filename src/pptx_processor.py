@@ -5,10 +5,11 @@ from src.document_processor import DocumentProcessor
 from tqdm import tqdm
 from src.utils import chunk_shapes
 
+
 class PptxProcessor(DocumentProcessor):
     def process(self):
         presentation = Presentation(self.file_path)
-        total_usage = {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
+        total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
 
         # Collect all shapes with text
         shapes_with_text = []
@@ -18,7 +19,9 @@ class PptxProcessor(DocumentProcessor):
                     shapes_with_text.append((shape, shape.text))
 
         # Group shapes into chunks
-        shape_chunks = chunk_shapes(shapes_with_text, max_tokens=7500, model="gpt-4-turbo")
+        shape_chunks = chunk_shapes(
+            shapes_with_text, max_tokens=7500, model="gpt-4-turbo"
+        )
 
         for chunk in tqdm(shape_chunks, desc="Translating PPTX"):
             # Combine the text of the shapes in the chunk
@@ -35,9 +38,9 @@ class PptxProcessor(DocumentProcessor):
                     shape.text = t
                 # Update token usage
                 usage = self.openai_api.last_usage
-                total_usage['prompt_tokens'] += usage['prompt_tokens']
-                total_usage['completion_tokens'] += usage['completion_tokens']
-                total_usage['total_tokens'] += usage['total_tokens']
+                total_usage["prompt_tokens"] += usage["prompt_tokens"]
+                total_usage["completion_tokens"] += usage["completion_tokens"]
+                total_usage["total_tokens"] += usage["total_tokens"]
             else:
                 print("Translation failed for a chunk.")
 

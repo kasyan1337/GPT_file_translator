@@ -9,12 +9,17 @@ import logging
 # Configure logging
 logging.basicConfig(filename="api_usage.log", level=logging.INFO)
 
+
 class OpenAIAPI:
     def __init__(self, model="gpt-4-turbo"):
         load_dotenv()
         openai.api_key = os.getenv("OPENAI_API_KEY")
         self.model = model
-        self.last_usage = {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
+        self.last_usage = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+        }
 
     def translate_text(self, prompt, text):
         try:
@@ -36,7 +41,7 @@ class OpenAIAPI:
             return response["choices"][0]["message"]["content"]
 
         except openai.error.OpenAIError as e:
-            if 'rate limit' in str(e).lower():
+            if "rate limit" in str(e).lower():
                 print("Rate limit exceeded. Waiting for 20 seconds.")
                 time.sleep(20)
                 return self.translate_text(prompt, text)
@@ -55,5 +60,8 @@ class OpenAIAPI:
             "gpt-3.5-turbo": {"prompt": 0.0015, "completion": 0.002},
         }
         rates = model_pricing.get(self.model, model_pricing["gpt-4"])
-        cost = ((usage['prompt_tokens'] * rates['prompt']) + (usage['completion_tokens'] * rates['completion'])) / 1000
+        cost = (
+            (usage["prompt_tokens"] * rates["prompt"])
+            + (usage["completion_tokens"] * rates["completion"])
+        ) / 1000
         return cost

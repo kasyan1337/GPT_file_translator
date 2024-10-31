@@ -5,17 +5,22 @@ from src.docx_processor import DocxProcessor
 from pdf2docx import Converter
 import tempfile
 
+
 class PdfProcessor(DocumentProcessor):
     def process(self):
         with tempfile.TemporaryDirectory() as temp_dir:
-            temp_docx_path = os.path.join(temp_dir, os.path.basename(self.file_path).replace('.pdf', '.docx'))
+            temp_docx_path = os.path.join(
+                temp_dir, os.path.basename(self.file_path).replace(".pdf", ".docx")
+            )
             print("Converting PDF to DOCX...")
             cv = Converter(self.file_path)
             cv.convert(temp_docx_path)
             cv.close()
 
             print("Processing DOCX file...")
-            docx_processor = DocxProcessor(temp_docx_path, temp_docx_path, self.openai_api, self.prompt)
+            docx_processor = DocxProcessor(
+                temp_docx_path, temp_docx_path, self.openai_api, self.prompt
+            )
             docx_processor.process()
 
             # Print token usage
@@ -28,10 +33,21 @@ class PdfProcessor(DocumentProcessor):
             output_pdf_dir = os.path.dirname(self.output_path)  # Just the directory
             print("Converting DOCX back to PDF using LibreOffice...")
             subprocess.run(
-                ["/Applications/LibreOffice.app/Contents/MacOS/soffice", "--headless", "--convert-to", "pdf", temp_docx_path, "--outdir", output_pdf_dir]
+                [
+                    "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+                    "--headless",
+                    "--convert-to",
+                    "pdf",
+                    temp_docx_path,
+                    "--outdir",
+                    output_pdf_dir,
+                ]
             )
 
             # Move the converted file to the specified output path
-            final_output_path = os.path.join(output_pdf_dir, os.path.basename(temp_docx_path).replace(".docx", ".pdf"))
+            final_output_path = os.path.join(
+                output_pdf_dir,
+                os.path.basename(temp_docx_path).replace(".docx", ".pdf"),
+            )
             if os.path.exists(final_output_path):
                 os.rename(final_output_path, self.output_path)
