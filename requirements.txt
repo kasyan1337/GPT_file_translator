@@ -2,4 +2,8 @@ openai
 python-dotenv
 python-docx
 python-pptx
-PyPDF2
+PyMuPDF
+aiohttp
+aiofiles
+tqdm
+tiktoken
